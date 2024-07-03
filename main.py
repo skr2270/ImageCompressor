@@ -1,13 +1,14 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
+from tkinter import ttk
 from PIL import Image, ImageTk, ExifTags
 import os
 import traceback
 
-class ImageCompressor:
+class ImageSqueezer:
     def __init__(self, root):
         self.root = root
-        self.root.title("Image Compressor")
+        self.root.title("Image Squeezer")
 
         # Set up the interface
         self.label = tk.Label(root, text="Compress Image", font=("Arial", 20))
@@ -32,13 +33,42 @@ class ImageCompressor:
         self.download_button = tk.Button(root, text="Download Compressed Images", command=self.download_images)
         self.download_button.pack(pady=20)
 
+        self.upload_progress_label = tk.Label(root, text="Upload Progress", font=("Arial", 12))
+        self.upload_progress_label.pack(pady=5)
+
+        self.upload_progress = ttk.Progressbar(root, orient='horizontal', length=400, mode='determinate', style="green.Horizontal.TProgressbar")
+        self.upload_progress.pack(pady=5)
+
+        self.compress_progress_label = tk.Label(root, text="Compression Progress", font=("Arial", 12))
+        self.compress_progress_label.pack(pady=5)
+
+        self.compress_progress = ttk.Progressbar(root, orient='horizontal', length=400, mode='determinate', style="blue.Horizontal.TProgressbar")
+        self.compress_progress.pack(pady=5)
+
+        self.status_label = tk.Label(root, text="", font=("Arial", 12))
+        self.status_label.pack(pady=5)
+
+        self.total_images_label = tk.Label(root, text="Total images uploaded: 0", font=("Arial", 12))
+        self.total_images_label.pack(pady=5)
+
+        self.compressed_images_label = tk.Label(root, text="Total images compressed: 0", font=("Arial", 12))
+        self.compressed_images_label.pack(pady=5)
+
         self.image_paths = []
         self.images = []
+
+        # Configure the styles for the progress bars
+        style = ttk.Style()
+        style.configure("green.Horizontal.TProgressbar", troughcolor='white', background='green')
+        style.configure("blue.Horizontal.TProgressbar", troughcolor='white', background='blue')
 
     def upload_image(self):
         file_paths = filedialog.askopenfilenames(filetypes=[("Image files", "*.jpg *.jpeg *.png *.bmp *.gif *.tiff")])
         if file_paths:
-            self.image_paths = file_paths
+            self.image_paths = [path for path in file_paths if path.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff'))]
+            print(f"Total images selected: {len(self.image_paths)}")
+            self.total_images_label.config(text=f"Total images uploaded: {len(self.image_paths)}")
+            self.upload_progress['maximum'] = len(self.image_paths)
             self.display_images()
 
     def display_images(self):
@@ -47,17 +77,27 @@ class ImageCompressor:
 
         for idx, image_path in enumerate(self.image_paths):
             try:
+                print(f"Loading image: {image_path}")
                 img = Image.open(image_path)
                 img.thumbnail((200, 200))
                 img = ImageTk.PhotoImage(img)
                 self.images.append(img)
                 self.canvas.create_image(200 * idx + 100, 100, image=img)
+                self.upload_progress['value'] = idx + 1
+                self.root.update_idletasks()
             except Exception as e:
                 print(f"Failed to load image {image_path}: {e}")
+                traceback.print_exc()
 
     def compress_image(self, image_path, compression_level):
         try:
+            print(f"Attempting to open image: {image_path}")
+            if not os.path.exists(image_path):
+                print(f"File does not exist: {image_path}")
+                return None
+
             img = Image.open(image_path)
+            print(f"Opened image: {image_path}")
 
             # Apply orientation correction if EXIF data is available
             try:
@@ -74,21 +114,25 @@ class ImageCompressor:
                             img = img.rotate(270, expand=True)
                         elif orientation == 8:
                             img = img.rotate(90, expand=True)
-            except (AttributeError, KeyError, IndexError):
-                print(f"EXIF data issue with {image_path}")
+                    print(f"Applied EXIF orientation for image: {image_path}")
+            except (AttributeError, KeyError, IndexError) as exif_error:
+                print(f"EXIF data issue with {image_path}: {exif_error}")
 
             # Convert 'RGBA' to 'RGB' if necessary
             if img.mode == 'RGBA':
                 img = img.convert('RGB')
+                print(f"Converted RGBA to RGB for image: {image_path}")
 
             # Create compressed directory if it doesn't exist
             directory = os.path.dirname(image_path)
             compressed_dir = os.path.join(directory, 'compressed')
             if not os.path.exists(compressed_dir):
                 os.makedirs(compressed_dir)
+                print(f"Created directory: {compressed_dir}")
 
             compressed_path = os.path.join(compressed_dir, os.path.splitext(os.path.basename(image_path))[0] + "_compressed.jpg")
             img.save(compressed_path, quality=compression_level)
+            print(f"Compressed image saved to: {compressed_path}")
             return compressed_path
 
         except (OSError, IOError) as e:
@@ -100,27 +144,35 @@ class ImageCompressor:
         except Exception as e:
             print(f"Failed to compress {image_path}: {e}")
             messagebox.showerror("Error", f"Failed to compress {image_path}: {e}")
-            print(traceback.format_exc())
+            traceback.print_exc()
         return None
 
     def download_images(self):
         compression_level = self.compression_slider.get()
         compressed_paths = []
         failed_images = []
+        skipped_images = []
 
-        for image_path in self.image_paths:
+        self.compress_progress['maximum'] = len(self.image_paths)
+        print(f"Starting compression for {len(self.image_paths)} images.")
+
+        for idx, image_path in enumerate(self.image_paths):
+            print(f"Processing image: {image_path}")
             compressed_path = self.compress_image(image_path, compression_level)
             if compressed_path:
                 compressed_paths.append(compressed_path)
             else:
-                failed_images.append(image_path)
+                skipped_images.append(image_path)
+            self.compress_progress['value'] = idx + 1
+            self.compressed_images_label.config(text=f"Total images compressed: {len(compressed_paths)}")
+            self.root.update_idletasks()
 
-        if failed_images:
-            messagebox.showerror("Error", f"Failed to compress {len(failed_images)} images.")
-            print("Failed images:")
-            for img in failed_images:
+        if skipped_images:
+            messagebox.showerror("Error", f"Skipped {len(skipped_images)} images.")
+            print("Skipped images:")
+            for img in skipped_images:
                 print(img)
-        
+
         messagebox.showinfo("Compression Complete", f"Successfully compressed {len(compressed_paths)} images.")
         print("Successfully compressed images:")
         for compressed_path in compressed_paths:
@@ -128,5 +180,5 @@ class ImageCompressor:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = ImageCompressor(root)
+    app = ImageSqueezer(root)
     root.mainloop()
