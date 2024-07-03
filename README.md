@@ -22,7 +22,7 @@ Image Compressor is a simple Python application that allows users to compress im
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/image-compressor.git
+   git clone https://github.com/skr2270/ImageSqueezer.git
    cd image-compressor
    ```
 
