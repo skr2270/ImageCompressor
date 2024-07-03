@@ -1,4 +1,3 @@
-
 # Image Compressor
 
 Image Compressor is a simple Python application that allows users to compress images while maintaining quality. It supports multiple image formats and provides a user-friendly interface for uploading, compressing, and downloading images.
@@ -23,12 +22,14 @@ Image Compressor is a simple Python application that allows users to compress im
 ## Installation
 
 1. **Clone the repository:**
+
    ```bash
-  git clone https://github.com/skr2270/ImageSqueezer.git
-    cd ImageSqueezer
+   git clone https://github.com/skr2270/ImageSqueezer.git
+   cd ImageSqueezer
    ```
 
 2. **Create and activate a virtual environment (optional but recommended):**
+
    ```bash
    python -m venv .venv
    source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
@@ -42,11 +43,13 @@ Image Compressor is a simple Python application that allows users to compress im
 ## Usage
 
 1. **Run the application:**
+
    ```bash
    python main.py
    ```
 
 2. **Use the interface:**
+
    - Click "Upload Image" to select images for compression.
    - Adjust the compression level using the slider.
    - Click "Download Compressed Images" to compress and save the images.
@@ -65,11 +68,13 @@ Image Compressor is a simple Python application that allows users to compress im
 To create an executable file for the application:
 
 1. **Install PyInstaller:**
+
    ```bash
    pip install pyinstaller
    ```
 
 2. **Build the executable:**
+
    ```bash
    pyinstaller --onefile --noconsole --name ImageSqueeze main.py
    ```
