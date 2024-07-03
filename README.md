@@ -1,6 +1,6 @@
-# Image Compressor
+# Image Squeezer
 
-Image Compressor is a simple Python application that allows users to compress images while maintaining quality. It supports multiple image formats and provides a user-friendly interface for uploading, compressing, and downloading images.
+Image Squeezer is a simple Python application that allows users to compress images while maintaining quality. It supports multiple image formats and provides a user-friendly interface for uploading, compressing, and downloading images.
 
 ## Features
 
