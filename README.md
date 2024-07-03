@@ -75,6 +75,27 @@ To create an executable file for the application:
 3. **Locate the executable:**
    - The executable will be created in the `dist` directory and will be named `ImageSqueeze.exe`.
 
+## Collaboration
+
+We welcome contributions from the community! If you would like to contribute to this project, please follow these steps:
+
+1. **Fork the repository** on GitHub.
+2. **Create a new branch** for your feature or bug fix:
+   ```bash
+   git checkout -b feature-name
+   ```
+3. **Commit your changes** with a descriptive commit message:
+   ```bash
+   git commit -m "Add feature-name"
+   ```
+4. **Push your branch** to your forked repository:
+   ```bash
+   git push origin feature-name
+   ```
+5. **Create a pull request** against the main repository's `master` branch.
+
+We look forward to your contributions!
+
 ## License
 
 This project is licensed under the MIT License. See the LICENSE file for details.
