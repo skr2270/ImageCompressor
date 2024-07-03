@@ -5,11 +5,13 @@ Image Compressor is a simple Python application that allows users to compress im
 
 ## Features
 
-- Compress images with adjustable compression levels.
+- Select multiple images for compression
 - Supports multiple image formats: JPEG, PNG, BMP, GIF, TIFF.
+- Displays thumbnails of selected images
 - Handles EXIF data to correct image orientation.
 - Provides detailed error messages for unsupported formats, corrupted files, size/memory issues, and EXIF data issues.
 - User-friendly interface with drag-and-drop support and compression level adjustment.
+- Real-time progress updates for image uploading and compression
 - Saves compressed images in a new "compressed" directory within the original image directory.
 
 ## Requirements
@@ -22,8 +24,8 @@ Image Compressor is a simple Python application that allows users to compress im
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/skr2270/ImageSqueezer.git
-   cd image-compressor
+  git clone https://github.com/skr2270/ImageSqueezer.git
+    cd ImageSqueezer
    ```
 
 2. **Create and activate a virtual environment (optional but recommended):**

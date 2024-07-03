@@ -14,14 +14,32 @@ class ImageSqueezer:
         self.label = tk.Label(root, text="Compress Image", font=("Arial", 20))
         self.label.pack(pady=10)
 
-        self.upload_button = tk.Button(root, text="Upload Image", command=self.upload_image)
+        self.upload_button = tk.Button(root, text="Select Images", command=self.select_images)
         self.upload_button.pack(pady=5)
 
         self.drag_drop_label = tk.Label(root, text="Or drag and drop an image here", font=("Arial", 12))
         self.drag_drop_label.pack(pady=5)
 
-        self.canvas = tk.Canvas(root, width=600, height=200)
-        self.canvas.pack(pady=10)
+        # Create a frame for the canvas and scrollbar
+        self.frame = tk.Frame(root)
+        self.frame.pack(pady=10)
+
+        self.canvas = tk.Canvas(self.frame, width=600, height=200)
+        self.scrollbar = tk.Scrollbar(self.frame, orient="horizontal", command=self.canvas.xview)
+        self.canvas.configure(xscrollcommand=self.scrollbar.set)
+
+        self.scrollbar.pack(side="bottom", fill="x")
+        self.canvas.pack(side="left")
+
+        self.scrollable_frame = tk.Frame(self.canvas)
+        self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+
+        self.scrollable_frame.bind(
+            "<Configure>",
+            lambda e: self.canvas.configure(
+                scrollregion=self.canvas.bbox("all")
+            )
+        )
 
         self.compression_level_label = tk.Label(root, text="Compression Level", font=("Arial", 12))
         self.compression_level_label.pack(pady=5)
@@ -30,7 +48,7 @@ class ImageSqueezer:
         self.compression_slider.set(50)
         self.compression_slider.pack(pady=5)
 
-        self.download_button = tk.Button(root, text="Download Compressed Images", command=self.download_images)
+        self.download_button = tk.Button(root, text="Compress and Download Images", command=self.download_images)
         self.download_button.pack(pady=20)
 
         self.upload_progress_label = tk.Label(root, text="Upload Progress", font=("Arial", 12))
@@ -48,8 +66,11 @@ class ImageSqueezer:
         self.status_label = tk.Label(root, text="", font=("Arial", 12))
         self.status_label.pack(pady=5)
 
-        self.total_images_label = tk.Label(root, text="Total images uploaded: 0", font=("Arial", 12))
-        self.total_images_label.pack(pady=5)
+        self.selected_images_label = tk.Label(root, text="Total images selected: 0", font=("Arial", 12))
+        self.selected_images_label.pack(pady=5)
+
+        self.uploaded_images_label = tk.Label(root, text="Total images uploaded: 0", font=("Arial", 12))
+        self.uploaded_images_label.pack(pady=5)
 
         self.compressed_images_label = tk.Label(root, text="Total images compressed: 0", font=("Arial", 12))
         self.compressed_images_label.pack(pady=5)
@@ -62,18 +83,21 @@ class ImageSqueezer:
         style.configure("green.Horizontal.TProgressbar", troughcolor='white', background='green')
         style.configure("blue.Horizontal.TProgressbar", troughcolor='white', background='blue')
 
-    def upload_image(self):
+    def select_images(self):
         file_paths = filedialog.askopenfilenames(filetypes=[("Image files", "*.jpg *.jpeg *.png *.bmp *.gif *.tiff")])
         if file_paths:
             self.image_paths = [path for path in file_paths if path.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff'))]
             print(f"Total images selected: {len(self.image_paths)}")
-            self.total_images_label.config(text=f"Total images uploaded: {len(self.image_paths)}")
+            self.selected_images_label.config(text=f"Total images selected: {len(self.image_paths)}")
             self.upload_progress['maximum'] = len(self.image_paths)
             self.display_images()
 
     def display_images(self):
-        self.canvas.delete("all")
+        for widget in self.scrollable_frame.winfo_children():
+            widget.destroy()
+
         self.images = []
+        failed_images = []
 
         for idx, image_path in enumerate(self.image_paths):
             try:
@@ -82,12 +106,21 @@ class ImageSqueezer:
                 img.thumbnail((200, 200))
                 img = ImageTk.PhotoImage(img)
                 self.images.append(img)
-                self.canvas.create_image(200 * idx + 100, 100, image=img)
+                label = tk.Label(self.scrollable_frame, image=img)
+                label.grid(row=0, column=idx)
                 self.upload_progress['value'] = idx + 1
+                self.uploaded_images_label.config(text=f"Total images uploaded: {len(self.images)}")
                 self.root.update_idletasks()
             except Exception as e:
                 print(f"Failed to load image {image_path}: {e}")
                 traceback.print_exc()
+                failed_images.append(image_path)
+
+        if failed_images:
+            messagebox.showerror("Error", f"Failed to load {len(failed_images)} images.")
+            print("Failed images:")
+            for img in failed_images:
+                print(img)
 
     def compress_image(self, image_path, compression_level):
         try:
